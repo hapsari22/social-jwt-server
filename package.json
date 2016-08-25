@@ -1,0 +1,17 @@
+{
+  "name": "facebook-jwt-server",
+  "version": "1.0.0",
+  "description": "Provides and verifies a JWT token to authenticate facebook users. Based on https://ole.michelsen.dk/blog/social-signin-spa-jwt-server.html",
+  "main": "app/index.js",
+  "scripts": {
+    "start": "node app/index.js"
+  },
+  "author": "Lorent Lempereur (lorent.lempereur.dev@gmail.com)",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "jsonwebtoken": "^7.1.9",
+    "request": "^2.74.0"
+  }
+}
