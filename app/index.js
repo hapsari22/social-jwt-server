@@ -8,6 +8,7 @@ const facebookSecretKey = process.env.FACEBOOK_SECRET_KEY;
 const tokenSecretKey    = process.env.TOKEN_SECRET_KEY;
 const tokenExpiration   = process.env.TOKEN_EXPIRATION;
 const tokenIssuer       = process.env.TOKEN_ISSUER;
+const corsDomains       = process.env.CORS_DOMAINS || "*";
 const port              = 3000;
 const facebookApi       = "https://graph.facebook.com";
 
@@ -15,6 +16,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", corsDomains);
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 app.post("/auth", (req, res) => {
   var socialToken        = req.body.socialToken;
@@ -79,7 +86,6 @@ function createJwt(profile) {
     expiresIn: tokenExpiration,
     issuer:    tokenIssuer
   });
-  console.log("Token:", token);
   return token;
 }
 
