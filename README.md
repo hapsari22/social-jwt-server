@@ -9,16 +9,21 @@ It is based on this article: https://ole.michelsen.dk/blog/social-signin-spa-jwt
 * `TOKEN_EXPIRATION`: _e.g._ '2d'. Check https://github.com/auth0/node-jsonwebtoken for more details
 * `TOKEN_ISSUER`: identifies principal that issues the tokens (_e.g._ your application domain)
 * `FACEBOOK_APP_ID`
+* `FACEBOOK_SECRET_KEY`: only required if you want long-lived token
 
 ## Endpoints
 
 Two endpoints are exposed:
-* `POST /auth`: Post an object with a single attribute as the payload:
+* `POST /auth`: Post an object with two attribute as the payload:
 ```
 {
-  socialToken: 'the facebook token'
+  socialToken: 'the facebook token',
+  longLived:   false
 }
 ```
+
+If long-lived is `true`, this endpoint will return a Facebook Long-Lived Token provided by Facebook. The `FACEBOOK_SECRET_KEY` environment variable must be set.
+
 * `GET /secure`: Pass your JWT token as a query string `jwt` to verify it
 
 ## Start container with docker CLI

@@ -1,14 +1,15 @@
-var express           = require("express");
-var bodyParser        = require("body-parser")
-var jwt               = require("jsonwebtoken");
-var request           = require("request");
-var app               = express();
-const facebookAppId   = process.env.FACEBOOK_APP_ID;
-const tokenSecretKey  = process.env.TOKEN_SECRET_KEY;
-const tokenExpiration = process.env.TOKEN_EXPIRATION;
-const tokenIssuer     = process.env.TOKEN_ISSUER;
-const port            = 3000;
-const facebookApi     = "https://graph.facebook.com/me";
+var express             = require("express");
+var bodyParser          = require("body-parser")
+var jwt                 = require("jsonwebtoken");
+var request             = require("request");
+var app                 = express();
+const facebookAppId     = process.env.FACEBOOK_APP_ID;
+const facebookSecretKey = process.env.FACEBOOK_SECRET_KEY;
+const tokenSecretKey    = process.env.TOKEN_SECRET_KEY;
+const tokenExpiration   = process.env.TOKEN_EXPIRATION;
+const tokenIssuer       = process.env.TOKEN_ISSUER;
+const port              = 3000;
+const facebookApi       = "https://graph.facebook.com";
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -16,8 +17,9 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.post("/auth", (req, res) => {
-  var socialToken = req.body.socialToken;
-  validateSocialToken(socialToken).then((profile) => {
+  var socialToken        = req.body.socialToken;
+  var longLivedRequested = Boolean(req.body.longLived);
+  validateSocialToken(socialToken, longLivedRequested).then((profile) => {
     res.send(createJwt(profile));
   }).catch((err) => {
     res.send(`Failed! ${err.message}`);
@@ -35,12 +37,10 @@ app.get("/secure", (req, res) => {
 });
 
 
-function validateSocialToken(socialToken) {
+function validateSocialToken(socialToken, longLivedRequested) {
   return new Promise((resolve, reject) => {
-    request({
-        url: facebookApi,
-        qs: {access_token: socialToken}
-      },
+    var endpoint = longLivedRequested ? longLivedToken : facebookVerification;
+    request(longLivedToken,
       (error, response, body) => {
         if (!error && response.statusCode == 200) {
           resolve(JSON.parse(body));
@@ -50,6 +50,28 @@ function validateSocialToken(socialToken) {
       }
     );
   });
+}
+
+function facebookVerification(shortLivedToken) {
+  return {
+    url: `${facebookApi}/me`,
+    qs: {
+      access_token: shortLivedToken
+    }
+  };
+}
+
+function longLivedToken(shortLivedToken) {
+  return {
+    url: `${facebookApi}/oauth/access_token`,
+    qs: {
+      grant_type: "fb_exchange_token",
+      fb_exchange_token: shortLivedToken,
+      client_id: facebookAppId,
+      client_secret: facebookSecretKey,
+
+    }
+  };
 }
 
 function createJwt(profile) {
