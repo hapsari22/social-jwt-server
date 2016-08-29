@@ -26,11 +26,31 @@ app.use((req, res, next) => {
 app.post("/auth", (req, res) => {
   var socialToken        = req.body.socialToken;
   var longLivedRequested = Boolean(req.body.longLived);
-  validateSocialToken(socialToken, longLivedRequested).then((profile) => {
-    res.send(createJwt(profile));
-  }).catch((err) => {
-    res.send(`Failed! ${err.message}`);
-  });
+
+  if (longLivedRequested) {
+    requestLongLivedToken(socialToken).then((longLivedResponse) => {
+      var parsedResponse = parseFacebookToken(longLivedResponse);
+      var longLivedToken = parsedResponse.token;
+      console.log("Long live token found."+longLivedToken);
+      return identifySocialToken(longLivedToken);
+    }).then((profile) => {
+      console.log("Profile found using long lived token.");
+      profile.isLongLived = longLivedRequested;
+      res.send(createJwt(profile));
+    })
+    .catch((err) => {
+      res.send(`Failed! ${err.message}`);
+    });
+  }
+  else {
+    identifySocialToken(socialToken).then((profile) => {
+      console.log("Profile found using short lived token.");
+      profile.isLongLived = longLivedRequested;
+      res.send(createJwt(profile));
+    }).catch((err) => {
+      res.send(`Failed! ${err.message}`);
+    });
+  }
 });
 
 app.get("/secure", (req, res) => {
@@ -43,69 +63,78 @@ app.get("/secure", (req, res) => {
   }
 });
 
-function validateSocialToken(socialToken, longLivedRequested) {
+function identifySocialToken(socialToken) {
+  console.log("Identify social token against Facebook.");
   return new Promise((resolve, reject) => {
-    var endpoint = longLivedRequested ? longLivedToken : facebookVerification;
-    request(endpoint(socialToken),
-      (error, response, body) => {
-        if (!error && response.statusCode == 200) {
-          if (longLivedRequested) {
-            var longLivedToken = body;
-            validateSocialToken(longLivedToken, false);
-          }
-          else {
-            var profileFacebook = JSON.parse(body);
-            profileFacebook.facebookAccessToken = socialToken;
-            resolve(profileFacebook);
-          }
-        } else {
-          reject(error);
-        }
+    request({
+      method: "GET",
+      url: `${facebookApi}/me`,
+      qs: {
+        access_token: socialToken
       }
-    );
+    }, (error, response, body) => {
+      console.log("Response received from facebook:"+JSON.stringify(response));
+      if (!error && response.statusCode == 200) {
+        var profileFacebook = JSON.parse(body);
+        profileFacebook.facebookAccessToken = socialToken;
+        console.log("Resolve: "+profileFacebook);
+        resolve(profileFacebook);
+      } else {
+        reject(error);
+      }
+    });
   });
 }
 
-function facebookVerification(shortLivedToken) {
-  return {
-    method: "GET",
-    url: `${facebookApi}/me`,
-    qs: {
-      access_token: shortLivedToken
-    }
-  };
-}
-
-function longLivedToken(shortLivedToken) {
-  return {
-    method: "GET",
-    url: `${facebookApi}/oauth/access_token`,
-    qs: {
-      grant_type: "fb_exchange_token",
-      fb_exchange_token: shortLivedToken,
-      client_id: facebookAppId,
-      client_secret: facebookSecretKey,
-
-    }
-  };
+function requestLongLivedToken(shortLivedToken) {
+  console.log("Request Long Lived Token");
+  return new Promise((resolve, reject) => {
+    request({
+      method: "GET",
+      url: `${facebookApi}/oauth/access_token`,
+      qs: {
+        grant_type: "fb_exchange_token",
+        fb_exchange_token: shortLivedToken,
+        client_id: facebookAppId,
+        client_secret: facebookSecretKey
+      }
+    }, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        resolve(body);
+      } else {
+        reject(error);
+      }
+    });
+  });
 }
 
 function createJwt(profile, accessToken) {
-  var data = {
-    facebookProfile: profile,
-    facebookAccessToken: accessToken
-  };
-  var token = jwt.sign(profile, tokenSecretKey, {
+  return jwt.sign(profile, tokenSecretKey, {
     expiresIn: tokenExpiration,
     issuer:    tokenIssuer
   });
-  return token;
 }
 
 function verifyJwt(jwtString) {
   return jwt.verify(jwtString, tokenSecretKey, {
     issuer: tokenIssuer
   });
+}
+
+function parseFacebookToken(facebookResponse) {
+  var regexp = /^access_token=([a-zA-Z0-9]+)&expires=([0-9]+)$/;
+  var match;
+  if ((match = regexp.exec(facebookResponse)) !== null) {
+      if (match.index === regexp.lastIndex) {
+          regexp.lastIndex++;
+      }
+      console.log("Regexp OK:"+match);
+      return {
+        token:      match[1],
+        expiration: match[2]
+      };
+  }
+  return {};
 }
 
 app.listen(port, () => {
