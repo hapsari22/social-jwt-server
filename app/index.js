@@ -43,14 +43,21 @@ app.get("/secure", (req, res) => {
   }
 });
 
-
 function validateSocialToken(socialToken, longLivedRequested) {
   return new Promise((resolve, reject) => {
     var endpoint = longLivedRequested ? longLivedToken : facebookVerification;
     request(endpoint(socialToken),
       (error, response, body) => {
         if (!error && response.statusCode == 200) {
-          resolve(JSON.parse(body));
+          if (longLivedRequested) {
+            var longLivedToken = body;
+            validateSocialToken(longLivedToken, false);
+          }
+          else {
+            var profileFacebook = JSON.parse(body);
+            profileFacebook.facebookAccessToken = socialToken;
+            resolve(profileFacebook);
+          }
         } else {
           reject(error);
         }
@@ -83,7 +90,11 @@ function longLivedToken(shortLivedToken) {
   };
 }
 
-function createJwt(profile) {
+function createJwt(profile, accessToken) {
+  var data = {
+    facebookProfile: profile,
+    facebookAccessToken: accessToken
+  };
   var token = jwt.sign(profile, tokenSecretKey, {
     expiresIn: tokenExpiration,
     issuer:    tokenIssuer
