@@ -47,7 +47,7 @@ app.get("/secure", (req, res) => {
 function validateSocialToken(socialToken, longLivedRequested) {
   return new Promise((resolve, reject) => {
     var endpoint = longLivedRequested ? longLivedToken : facebookVerification;
-    request(longLivedToken,
+    request(endpoint(socialToken),
       (error, response, body) => {
         if (!error && response.statusCode == 200) {
           resolve(JSON.parse(body));
@@ -61,6 +61,7 @@ function validateSocialToken(socialToken, longLivedRequested) {
 
 function facebookVerification(shortLivedToken) {
   return {
+    method: "GET",
     url: `${facebookApi}/me`,
     qs: {
       access_token: shortLivedToken
@@ -70,6 +71,7 @@ function facebookVerification(shortLivedToken) {
 
 function longLivedToken(shortLivedToken) {
   return {
+    method: "GET",
     url: `${facebookApi}/oauth/access_token`,
     qs: {
       grant_type: "fb_exchange_token",
