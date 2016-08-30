@@ -10,7 +10,8 @@ It is based on this article: https://ole.michelsen.dk/blog/social-signin-spa-jwt
 * `TOKEN_ISSUER`: identifies principal that issues the tokens (_e.g._ your application domain)
 * `FACEBOOK_APP_ID`
 * `FACEBOOK_SECRET_KEY`: only required if you want long-lived token
-* `CORS_DOMAINS`: Specify this variable to give cross-domain in every response. Optional. Default value: "*"
+* `CORS_DOMAINS`: Specify this variable to give cross-domain headers in every response. Optional. Default value: "*"
+* `PORT`: The port the server listens to. Optional. Default value: 3000
 
 ## Endpoints
 
