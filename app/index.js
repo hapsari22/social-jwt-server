@@ -21,7 +21,7 @@ app.post("/auth", (req, res) => {
   var longLivedRequested = Boolean(req.body.longLived);
 
   if (longLivedRequested) {
-    var promise = requestLongLivedToken(socialToken).then((longLivedResponse) => {
+    var promise = facebook.requestLongLivedToken(socialToken).then((longLivedResponse) => {
       var longLivedToken = facebook.parseAccessToken(longLivedResponse).token;
       return facebook.findProfile(longLivedToken);
     });

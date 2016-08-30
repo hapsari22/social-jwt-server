@@ -1,14 +1,14 @@
-var request                 = require("request");
-const FACEBOOK_TOKEN_REGEXP = /^access_token=([a-zA-Z0-9]+)&expires=([0-9]+)$/;
-const FACEBOOK_API          = "https://graph.facebook.com";
-const FACEBOOK_APP_ID       = process.env.FACEBOOK_APP_ID;
-const FACEBOOK_SECRET_KEY   = process.env.FACEBOOK_SECRET_KEY;
+var request               = require("request");
+const FACEBOOK_API        = "https://graph.facebook.com";
+const FACEBOOK_APP_ID     = process.env.FACEBOOK_APP_ID;
+const FACEBOOK_SECRET_KEY = process.env.FACEBOOK_SECRET_KEY;
 
 module.exports = {
   parseAccessToken: (facebookResponse) => {
-    var match;
-    if ((match = FACEBOOK_TOKEN_REGEXP.exec(facebookResponse)) !== null) {
-        if (match.index === FACEBOOK_TOKEN_REGEXP.lastIndex) {
+    var regexp = /^access_token=([a-zA-Z0-9]+)&expires=([0-9]+)$/;
+    var match  = regexp.exec(facebookResponse);
+    if (match !== null) {
+        if (match.index === regexp.lastIndex) {
             regexp.lastIndex++;
         }
         return {
