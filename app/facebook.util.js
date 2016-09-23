@@ -30,8 +30,12 @@ module.exports = {
       }, (error, response, body) => {
         if (!error && response.statusCode == 200) {
           var profileFacebook = JSON.parse(body);
-          profileFacebook.facebookAccessToken = socialToken;
-          resolve(profileFacebook);
+          profile = {
+            facebookId:          profileFacebook.id,
+            facebookAccessToken: socialToken,
+            name:                profileFacebook.name
+          }
+          resolve(profile);
         } else {
           reject(error);
         }

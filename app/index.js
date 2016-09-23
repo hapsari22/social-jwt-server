@@ -19,6 +19,7 @@ app.use((req, res, next) => {
 app.post("/auth", (req, res) => {
   var socialToken        = req.body.socialToken;
   var longLivedRequested = Boolean(req.body.longLived);
+  var scopes             = req.body.scopes;
 
   if (longLivedRequested) {
     var promise = facebook.requestLongLivedToken(socialToken).then((longLivedResponse) => {
@@ -31,7 +32,13 @@ app.post("/auth", (req, res) => {
   }
 
   promise.then((profile) => {
-    res.send(jwt.createToken(profile));
+    var facebookToken = profile.facebookAccessToken;
+    delete profile.facebookAccessToken;
+    var accessToken   = jwt.createToken(profile);
+    res.send({
+      accessToken: accessToken,
+      facebookToken: facebookToken
+    });
   }).catch((err) => {
     res.send(`Failed! ${err.message}`);
   });
@@ -43,7 +50,7 @@ app.get("/secure", (req, res) => {
     var profile = jwt.verify(jwtString);
     res.send(`You are good people: ${profile.id}`);
   } catch (err) {
-    res.send("Hey, you are not supposed to be here!");
+    res.status(403).send("Wrong token.");
   }
 });
 

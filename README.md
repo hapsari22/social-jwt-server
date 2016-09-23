@@ -8,6 +8,7 @@ It is based on this article: https://ole.michelsen.dk/blog/social-signin-spa-jwt
 * `TOKEN_SECRET_KEY` : Symmetric key you should not share with anyone except your own applications.
 * `TOKEN_EXPIRATION`: _e.g._ '2d'. Check https://github.com/auth0/node-jsonwebtoken for more details
 * `TOKEN_ISSUER`: identifies principal that issues the tokens (_e.g._ your application domain)
+* `TOKEN_ALGORITHM`: which Signin algorithm to use. Optional. Default: HS512. To see all supported algorithms: https://github.com/auth0/node-jsonwebtoken
 * `FACEBOOK_APP_ID`
 * `FACEBOOK_SECRET_KEY`: only required if you want long-lived token
 * `CORS_DOMAINS`: Specify this variable to give cross-domain headers in every response. Optional. Default value: "*"
@@ -23,6 +24,16 @@ Two endpoints are exposed:
   longLived:   false
 }
 ```
+This endpoints responds with:
+```
+{
+  accessToken: "XXX",
+  socialToken: "YYY"
+}
+```
+Where
+* `accessToken` is the JWT you requested
+* `facebookToken` is the Facebook access token (possibly a long-lived one)
 
 If long-lived is `true`, this endpoint will return a Facebook Long-Lived Token provided by Facebook. The `FACEBOOK_SECRET_KEY` environment variable must be set.
 
@@ -59,7 +70,6 @@ authentication-server:
 
 ## Future work
 
-* CORS
 * Implement other providers
 * Performance tuning
 * Configure encryption algorithm
