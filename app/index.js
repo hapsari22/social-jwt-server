@@ -1,10 +1,10 @@
-var facebook       = require("./facebook.util.js");
 var jwt            = require("./jwt.util.js");
 var express        = require("express");
 var bodyParser     = require("body-parser");
 var app            = express();
 const CORS_DOMAINS = process.env.CORS_DOMAINS || "*";
 const PORT         = process.env.PORT || 3000;
+const PROVIDERS    = [require("./facebook.util.js"), require("./google.util.js")]
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -16,44 +16,41 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post("/auth", (req, res) => {
-  var socialToken        = req.body.socialToken;
-  var longLivedRequested = Boolean(req.body.longLived);
-  var scopes             = req.body.scopes;
+function findProvider(req) {
+  return PROVIDERS.find((provider) => {
+    return provider.matches(req);
+  });
+}
 
-  if (longLivedRequested) {
-    var promise = facebook.requestLongLivedToken(socialToken).then((longLivedResponse) => {
-      var longLivedToken = facebook.parseAccessToken(longLivedResponse).token;
-      return facebook.findProfile(longLivedToken);
+app.post("/auth", (req, res) => {
+  var provider = findProvider(req);
+  console.log(provider);
+  if (provider !== null && provider !== undefined) {
+    provider.requestProfile(req).then((response) => {
+      res.json({
+        accessToken: jwt.createToken(response.socialProfile),
+        socialToken: response.socialToken
+      });
+    }).catch((err) => {
+      res.status(401).json({error: `Failed! ${err.message}`});
     });
   }
   else {
-    var promise = facebook.findProfile(socialToken);
+    res.status(401).json({error: "no_provider_found"});
   }
-
-  promise.then((profile) => {
-    var facebookToken = profile.facebookAccessToken;
-    delete profile.facebookAccessToken;
-    var accessToken   = jwt.createToken(profile);
-    res.send({
-      accessToken: accessToken,
-      facebookToken: facebookToken
-    });
-  }).catch((err) => {
-    res.send(`Failed! ${err.message}`);
-  });
 });
 
 app.get("/secure", (req, res) => {
   var jwtString = req.query.jwt;
   try {
     var profile = jwt.verify(jwtString);
-    res.send(`You are good people: ${profile.id}`);
+    res.json({success: true});
   } catch (err) {
-    res.status(403).send("Wrong token.");
+    res.status(401).json({error: "wrong_token"});
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Authentication server running on port ${PORT}.`);
+  console.log(`${PROVIDERS.length} providers registered.`);
 });
