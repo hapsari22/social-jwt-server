@@ -5,39 +5,30 @@ It is originally based on this article: https://ole.michelsen.dk/blog/social-sig
 
 ## Environment variables
 
+### Common properties
+
 * `TOKEN_SECRET_KEY` : Symmetric key you should not share with anyone except your own applications.
 * `TOKEN_EXPIRATION`: _e.g._ '2d'. Check https://github.com/auth0/node-jsonwebtoken for more details
 * `TOKEN_ISSUER`: identifies principal that issues the tokens (_e.g._ your application domain)
 * `TOKEN_ALGORITHM`: which Signin algorithm to use. Optional. Default: HS512. To see all supported algorithms: https://github.com/auth0/node-jsonwebtoken
-* `FACEBOOK_APP_ID`: only required if you want to enable Facebook authentication
-* `FACEBOOK_SECRET_KEY`: only required if you want long-lived token
-* `GOOGLE_APP_ID`: only required if you want to enable Google authentication
 * `CORS_DOMAINS`: Specify this variable to give cross-domain headers in every response. Optional. Default value: "*"
 * `PORT`: The port the server listens to. Optional. Default value: 3000
+
+### Facebook
+
+* `FACEBOOK_APP_ID`: only required if you want to enable Facebook authentication
+* `FACEBOOK_SECRET_KEY`: only required if you want a long-lived token
+
+### Google
+
+* `GOOGLE_APP_ID`: only required if you want to enable Google authentication
+* `GOOGLE_SECRET_KEY`: only required if you want a refresh token (`long-lived = true`)
 
 ## Endpoints
 
 Two endpoints are exposed:
-* `POST /auth`: Post an object with two attribute as the payload:
-```
-{
-  facebookToken: 'the facebook token if facebook is the social network to use to authenticate',
-  googleToken: 'the google token if google is the social network to use to authenticate',
-  longLived:   false
-}
-```
-This endpoints responds with:
-```
-{
-  accessToken: "XXX",
-  socialToken: "YYY"
-}
-```
-Where
-* `accessToken` is the JWT you requested
-* `socialToken` is the Facebook/Google access token (possibly a long-lived one)
+* `POST /auth`: Request an Application JWT based on a given social token.
 
-If long-lived is `true`, this endpoint will return a Social Long-Lived Token provided by Facebook or Google (depending on the request body). The relevant `FACEBOOK_SECRET_KEY` and/or `GOOGLE_SECRET_KEY` environment variable must be set.
 
 * `GET /secure`: Pass your JWT token as a query string `jwt` to verify it
 
@@ -70,17 +61,56 @@ authentication-server:
       FACEBOOK_APP_ID: 183740293593225
 ```
 
-## Sample 1 - Facebook authentication
+## Sample 1 - `/auth` for Facebook authentication
 
-TODO
+If you want to request an Application JWT based on a Facebook access token, your `POST` request must have this payload:
+```
+{
+  facebookToken: '<the facebook OAuth2 access token>',
+  longLived:   false
+}
+```
+This endpoints responds with:
+```
+{
+  accessToken: "XXX",
+  socialToken: "YYY"
+}
+```
+Where
+* `accessToken` is the JWT you requested
+* `socialToken` is the Facebook access token (possibly a long-lived one)
 
-## Sample 2 - Google authentication
+If long-lived is `true`, this endpoint will return a Social Long-Lived Token provided by Facebook. The `FACEBOOK_SECRET_KEY` environment variable must be set.
 
-TODO
+
+## Sample 2 - `/auth` for  Google authentication
+
+If you want to request an Application JWT based on a Google access token, your `POST` request must have this payload:
+```
+{
+  googleToken: '<the google OAuth2 access token>',
+  longLived:   true
+}
+```
+This endpoints responds with:
+```
+{
+  accessToken: "XXX",
+  socialToken: "YYY",
+  refreshToken: "ZZZ"
+}
+```
+Where
+* `accessToken` is the JWT you requested
+* `socialToken` is the Google access token
+* `refreshToken` is the Google refresb token; not present if the `longLived` is set to `false`.
+
+To receive a refresh token, both conditions must be met:
+* The `FACEBOOK_SECRET_KEY` environment variable must be set.
+* `longLived` must be set to `true`
 
 ## Future work
 
-* Better documentation
-* Long-lived token for google provider
 * Performance tuning
 * Use a perf-oriented technology? (Go, bla bla bla)
