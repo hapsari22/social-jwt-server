@@ -24,7 +24,6 @@ function findProvider(req) {
 
 app.post("/auth", (req, res) => {
   var provider = findProvider(req);
-  console.log(provider);
   if (provider !== null && provider !== undefined) {
     provider.requestProfile(req).then((response) => {
       res.json({

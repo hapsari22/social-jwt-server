@@ -1,6 +1,6 @@
 var request               = require("request");
 const FACEBOOK_API        = "https://graph.facebook.com";
-const FACEBOOK_FIELDS      = "email,name";
+const FACEBOOK_FIELDS     = "email,name";
 const FACEBOOK_APP_ID     = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_SECRET_KEY = process.env.FACEBOOK_SECRET_KEY;
 

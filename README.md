@@ -70,7 +70,17 @@ authentication-server:
       FACEBOOK_APP_ID: 183740293593225
 ```
 
+## Sample 1 - Facebook authentication
+
+TODO
+
+## Sample 2 - Google authentication
+
+TODO
+
 ## Future work
 
+* Better documentation
+* Long-lived token for google provider
 * Performance tuning
 * Use a perf-oriented technology? (Go, bla bla bla)
