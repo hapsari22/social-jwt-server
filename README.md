@@ -24,6 +24,8 @@ It is originally based on this article: https://ole.michelsen.dk/blog/social-sig
 * `GOOGLE_APP_ID`: only required if you want to enable Google authentication
 * `GOOGLE_SECRET_KEY`: only required if you want a refresh token (`long-lived = true`)
 
+Google authentication works for the "one-time code" server-side flow. see https://developers.google.com/identity/sign-in/web/server-side-flow
+
 ## Endpoints
 
 Two endpoints are exposed:
@@ -86,10 +88,10 @@ If long-lived is `true`, this endpoint will return a Social Long-Lived Token pro
 
 ## Sample 2 - `/auth` for  Google authentication
 
-If you want to request an Application JWT based on a Google access token, your `POST` request must have this payload:
+If you want to request an Application JWT based on a Google one-time code, your `POST` request must have this payload:
 ```
 {
-  googleToken: '<the google OAuth2 access token>',
+  googleOneTimeCode: '<the google one-time code of your server-side flow>',
   longLived:   true
 }
 ```
@@ -97,14 +99,16 @@ This endpoints responds with:
 ```
 {
   accessToken: "XXX",
-  socialToken: "YYY",
-  refreshToken: "ZZZ"
+  socialToken: {
+    accessToken: "YYY",
+    refreshToken: "ZZZ"
+  }
 }
 ```
 Where
 * `accessToken` is the JWT you requested
 * `socialToken` is the Google access token
-* `refreshToken` is the Google refresb token; not present if the `longLived` is set to `false`.
+* `refreshToken` is the Google refresh token; not present if the `longLived` is set to `false`.
 
 To receive a refresh token, both conditions must be met:
 * The `FACEBOOK_SECRET_KEY` environment variable must be set.

@@ -1,11 +1,32 @@
-var request               = require("request");
+var request              = require("request");
 
 const GOOGLE_APP_ID       = process.env.GOOGLE_APP_ID;
 const GOOGLE_API          = "https://www.googleapis.com";
-const GOOGLE_SECRET_KEY = process.env.GOOGLE_SECRET_KEY;
+const GOOGLE_SECRET_KEY   = process.env.GOOGLE_SECRET_KEY;
 const GOOGLE_FIELDS       = "email,id,name";
+const GOOGLE_ACCESS_TYPE  = "offline";
+const GOOGLE_GRANT_TYPE   = "authorization_code";
+const GOOGLE_REDIRECT_URI = "postmessage";
 
-function findProfile(socialToken) {
+function createResponse(accessToken, refreshToken, profileGoogle) {
+  var response = {
+    socialProfile: {
+      googleId: profileGoogle.id,
+      name:     profileGoogle.name,
+      email:    profileGoogle.email
+    },
+    socialToken: {
+      accessToken: accessToken
+    }
+  };
+
+  if (refreshToken !== null && refreshToken !== undefined) {
+    response.socialToken.refreshToken = refreshToken;
+  }
+  return response;
+}
+
+function findProfile(accessToken, refreshToken) {
   return new Promise((resolve, reject) => {
     request({
       method: "GET",
@@ -14,85 +35,70 @@ function findProfile(socialToken) {
         fields: GOOGLE_FIELDS
       },
       headers: {
-        "Authorization": `Bearer ${socialToken}`
+        "Authorization": `Bearer ${accessToken}`
       }
     }, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         var profileGoogle = JSON.parse(body);
-        profile = {
-          googleId: profileGoogle.id,
-          name:     profileGoogle.name,
-          email:    profileGoogle.email
-        }
-        resolve({
-          socialProfile: profile,
-          socialToken: socialToken
-        });
+        resolve(createResponse(accessToken, refreshToken, profileGoogle));
       } else {
-        console.log("Error when accessing Google API", response.body.error);
+        console.log("Error when accessing Google API", error, response.body.error);
         reject(response.body.error);
       }
     });
   });
 }
 
-function requestLongLivedToken(shortLivedToken) {
+function requestAccessToken(oneTimeCode) {
   return new Promise((resolve, reject) => {
-    request({
-      method: "POST",
-      url: `${GOOGLE_API}/userinfo/v2/me`,
-      qs: {
-        grant_type: "refresh_token",
-        fb_exchange_token: shortLivedToken,
-        client_id: FACEBOOK_APP_ID,
-        client_secret: FACEBOOK_SECRET_KEY
+    request.post({
+      url: `${GOOGLE_API}/oauth2/v4/token`,
+      form: {
+        client_id:     GOOGLE_APP_ID,
+        client_secret: GOOGLE_SECRET_KEY,
+        access_type:   GOOGLE_ACCESS_TYPE,
+        grant_type:    GOOGLE_GRANT_TYPE,
+        code:          oneTimeCode,
+        redirect_uri:  GOOGLE_REDIRECT_URI
       }
     }, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        resolve(body);
+      if (!body.error && response.statusCode == 200) {
+        resolve(JSON.parse(body));
       } else {
-        reject(error);
+        reject(body);
       }
     });
   });
 }
 
-function readSocialTokenIn(req) {
-  return req.body.googleToken;
+function readOneTimeCodeIn(req) {
+  return req.body.googleOneTimeCode;
 }
 
 function isEnabled() {
   return GOOGLE_APP_ID !== null && GOOGLE_APP_ID !== undefined;
 }
 
-
-// POST /oauth2/v4/token HTTP/1.1
-// Host: www.googleapis.com
-// Content-Type: application/x-www-form-urlencoded
-
-// client_id=8819981768.apps.googleusercontent.com&
-// client_secret={client_secret}&
-// refresh_token=1/6BMfW9j53gdGImsiyUH5kU5RsR4zwI9lUVX-tqf8JXQ&
-// grant_type=refresh_token
-
 module.exports = {
   requestProfile: (req) => {
-    var socialToken        = readSocialTokenIn(req);
-    var longLivedRequested = Boolean(req.body.longLived);
-    if (longLivedRequested) {
-      return findProfile(socialToken);
-      // return requestLongLivedToken(socialToken).then((longLivedResponse) => {
-      //   var longLivedToken = parseAccessToken(longLivedResponse).token;
-      //   return findProfile(longLivedToken);
-      // });
-    }
-    else {
-      return findProfile(socialToken);
-    }
+    var oneTimeCode = readOneTimeCodeIn(req);
+
+    return requestAccessToken(oneTimeCode)
+      .then((tokenResponse) => {
+        var longLivedRequested = Boolean(req.body.longLived);
+        var accessToken        = tokenResponse.access_token;
+        if (longLivedRequested) {
+          var refreshToken = tokenResponse.refresh_token;
+          return findProfile(accessToken, refreshToken);
+        }
+        else {
+          return findProfile(accessToken, null);
+        }
+      });
   },
 
   matches: (req) => {
-    var token = readSocialTokenIn(req);
-    return token !== null && token !== undefined && isEnabled();
+    var code = readOneTimeCodeIn(req);
+    return code !== null && code !== undefined && isEnabled();
   }
 }
