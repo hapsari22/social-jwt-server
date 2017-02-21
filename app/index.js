@@ -1,9 +1,24 @@
+function findCors() {
+  var domain = process.env.CORS_DOMAINS;
+  if (domain == null || domain == undefined) {
+    return "*";
+  }
+  else {
+    if (domain.startsWith("http")) {
+      return domain;
+    }
+    else {
+      return new RegExp(domain);
+    }
+  }
+}
+
 var jwt            = require("./jwt.util.js");
 var express        = require("express");
 var bodyParser     = require("body-parser");
+var cors           = require("cors");
 var app            = express();
-const CORS_DOMAINS = process.env.CORS_DOMAINS || "*";
-const CORS_SUFFIX  = process.env.CORS_SUFFIX || null;
+const CORS_DOMAINS = findCors();
 const PORT         = process.env.PORT || 3000;
 const PROVIDERS    = [require("./facebook.util.js"), require("./google.util.js")]
 
@@ -11,16 +26,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-app.use((req, res, next) => {
-  if (CORS_SUFFIX != null && req.hostname.endsWith(CORS_SUFFIX)) {
-    res.header("Access-Control-Allow-Origin", req.protocol + "://" + req.hostname);
-  }
-  else {
-    res.header("Access-Control-Allow-Origin", CORS_DOMAINS);
-  }
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+app.use(cors({
+  "origin": CORS_DOMAINS
+}));
 
 function findProvider(req) {
   return PROVIDERS.find((provider) => {

@@ -11,8 +11,7 @@ It is originally based on this article: https://ole.michelsen.dk/blog/social-sig
 * `TOKEN_EXPIRATION`: _e.g._ '2d'. Check https://github.com/auth0/node-jsonwebtoken for more details
 * `TOKEN_ISSUER`: identifies principal that issues the tokens (_e.g._ your application domain)
 * `TOKEN_ALGORITHM`: which Signin algorithm to use. Optional. Default: HS512. To see all supported algorithms: https://github.com/auth0/node-jsonwebtoken
-* `CORS_DOMAINS`: Specify this variable to give cross-domain headers in every response. Optional. Default value: "*"
-* `CORS_SUFFIX`: If this value is set, each request hostname suffix will be checked against it. If the value matches the request, CORS_DOMAINS is ignored.
+* `CORS_DOMAINS`: Specify this variable to give cross-domain headers in every response. Optional. Default value: "*". Can be a String (if it starts with `http`) or a Regexp. Check [Documentation](https://github.com/expressjs/cors) for more details.
 * `PORT`: The port the server listens to. Optional. Default value: 3000
 
 ### Facebook
