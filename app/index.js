@@ -3,6 +3,7 @@ var express        = require("express");
 var bodyParser     = require("body-parser");
 var app            = express();
 const CORS_DOMAINS = process.env.CORS_DOMAINS || "*";
+const CORS_SUFFIX  = process.env.CORS_SUFFIX || null;
 const PORT         = process.env.PORT || 3000;
 const PROVIDERS    = [require("./facebook.util.js"), require("./google.util.js")]
 
@@ -11,7 +12,12 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", CORS_DOMAINS);
+  if (CORS_SUFFIX != null && req.hostname.endsWith(CORS_SUFFIX)) {
+    res.header("Access-Control-Allow-Origin", req.protocol + "://" + req.hostname);
+  }
+  else {
+    res.header("Access-Control-Allow-Origin", CORS_DOMAINS);
+  }
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
