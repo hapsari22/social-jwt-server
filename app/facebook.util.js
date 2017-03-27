@@ -1,6 +1,7 @@
 var request               = require("request");
 const FACEBOOK_API        = "https://graph.facebook.com";
 const FACEBOOK_FIELDS     = "email,name";
+const FACEBOOK_VERSION    = process.env.FACEBOOK_VERSION;
 const FACEBOOK_APP_ID     = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_SECRET_KEY = process.env.FACEBOOK_SECRET_KEY;
 
@@ -8,7 +9,7 @@ function findProfile(socialToken) {
   return new Promise((resolve, reject) => {
     request({
       method: "GET",
-      url: `${FACEBOOK_API}/me`,
+      url: `${FACEBOOK_API}/${FACEBOOK_VERSION}/me`,
       qs: {
         access_token: socialToken,
         fields: FACEBOOK_FIELDS
@@ -33,25 +34,14 @@ function findProfile(socialToken) {
 }
 
 function parseAccessToken(facebookResponse) {
-  var regexp = /^access_token=([a-zA-Z0-9]+)&expires=([0-9]+)$/;
-  var match  = regexp.exec(facebookResponse);
-  if (match !== null) {
-      if (match.index === regexp.lastIndex) {
-          regexp.lastIndex++;
-      }
-      return {
-        token:      match[1],
-        expiration: match[2]
-      };
-  }
-  return {};
+  return JSON.parse(facebookToken).access_token;
 }
 
 function requestLongLivedToken(shortLivedToken) {
   return new Promise((resolve, reject) => {
     request({
       method: "GET",
-      url: `${FACEBOOK_API}/oauth/access_token`,
+      url: `${FACEBOOK_API}/${FACEBOOK_VERSION}/oauth/access_token`,
       qs: {
         grant_type: "fb_exchange_token",
         fb_exchange_token: shortLivedToken,
@@ -82,7 +72,7 @@ module.exports = {
     var longLivedRequested = Boolean(req.body.longLived);
     if (longLivedRequested) {
       return requestLongLivedToken(socialToken).then((longLivedResponse) => {
-        var longLivedToken = parseAccessToken(longLivedResponse).token;
+        var longLivedToken = parseAccessToken(longLivedResponse);
         return findProfile(longLivedToken);
       });
     }

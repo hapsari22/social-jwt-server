@@ -18,6 +18,7 @@ It is originally based on this article: https://ole.michelsen.dk/blog/social-sig
 
 * `FACEBOOK_APP_ID`: only required if you want to enable Facebook authentication
 * `FACEBOOK_SECRET_KEY`: only required if you want a long-lived token
+* `FACEBOOK_VERSION`: e.g. `v2.8`
 
 ### Google
 
