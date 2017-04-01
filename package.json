@@ -9,10 +9,10 @@
   "author": "Lorent Lempereur (lorent.lempereur.dev@gmail.com)",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.15.2",
-    "cors": "2.8.1",
-    "express": "^4.14.0",
-    "jsonwebtoken": "^7.1.9",
-    "request": "^2.74.0"
+    "body-parser": "1.17.1",
+    "cors": "2.8.3",
+    "express": "4.15.2",
+    "jsonwebtoken": "7.3.0",
+    "request": "2.81.0"
   }
 }

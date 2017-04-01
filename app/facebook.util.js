@@ -34,7 +34,7 @@ function findProfile(socialToken) {
 }
 
 function parseAccessToken(facebookResponse) {
-  return JSON.parse(facebookToken).access_token;
+  return JSON.parse(facebookResponse).access_token;
 }
 
 function requestLongLivedToken(shortLivedToken) {

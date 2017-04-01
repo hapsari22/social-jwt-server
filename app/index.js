@@ -45,6 +45,7 @@ app.post("/auth", (req, res) => {
         socialToken: response.socialToken
       });
     }).catch((err) => {
+      console.log(err);
       res.status(401).json({error: `Failed! ${err.message}`});
     });
   }
