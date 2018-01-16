@@ -31,8 +31,6 @@ Google authentication works for the "one-time code" server-side flow. see https:
 
 Two endpoints are exposed:
 * `POST /auth`: Request an Application JWT based on a given social token.
-
-
 * `GET /secure`: Pass your JWT token as a query string `jwt` to verify it
 
 ## Start container with docker CLI
@@ -114,6 +112,13 @@ Where
 To receive a refresh token, both conditions must be met:
 * The `FACEBOOK_SECRET_KEY` environment variable must be set.
 * `longLived` must be set to `true`
+
+## Build
+
+  ```
+  $ docker build . -t looorent/social-jwt-server:latest
+  $ docker push looorent/social-jwt-server:latest
+  ```
 
 ## Future work
 

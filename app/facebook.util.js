@@ -1,6 +1,6 @@
 var request               = require("request");
 const FACEBOOK_API        = "https://graph.facebook.com";
-const FACEBOOK_FIELDS     = "email,name";
+const FACEBOOK_FIELDS     = "email,name,locale";
 const FACEBOOK_VERSION    = process.env.FACEBOOK_VERSION;
 const FACEBOOK_APP_ID     = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_SECRET_KEY = process.env.FACEBOOK_SECRET_KEY;
@@ -20,7 +20,8 @@ function findProfile(socialToken) {
         profile = {
           facebookId:   profileFacebook.id,
           name:         profileFacebook.name,
-          email:        profileFacebook.email
+          email:        profileFacebook.email,
+          locale:       profileFacebook.locale
         }
         resolve({
           socialProfile: profile,

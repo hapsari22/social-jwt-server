@@ -1,6 +1,6 @@
 {
   "name": "social-jwt-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Provides and verifies a JWT token to authenticate users from social providers (facebook, google...). Based on https://ole.michelsen.dk/blog/social-signin-spa-jwt-server.html",
   "main": "app/index.js",
   "scripts": {
