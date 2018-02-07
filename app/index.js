@@ -46,7 +46,7 @@ app.post("/auth", (req, res) => {
       });
     }).catch((err) => {
       console.log(err);
-      res.status(401).json({error: `Failed! ${err.message}`});
+      res.status(401).json({error: `Failed! ${err ? err.message : ""}`});
     });
   }
   else {
@@ -62,6 +62,10 @@ app.get("/secure", (req, res) => {
   } catch (err) {
     res.status(401).json({error: "wrong_token"});
   }
+});
+
+app.get("/health", (req, res) => {
+  res.json({status: "ok"});
 });
 
 app.listen(PORT, () => {

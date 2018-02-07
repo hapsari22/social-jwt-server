@@ -29,9 +29,10 @@ Google authentication works for the "one-time code" server-side flow. see https:
 
 ## Endpoints
 
-Two endpoints are exposed:
+Three endpoints are exposed:
 * `POST /auth`: Request an Application JWT based on a given social token.
 * `GET /secure`: Pass your JWT token as a query string `jwt` to verify it
+* `GET /health`: Status endpoint. Returns `{status: "ok"}`
 
 ## Start container with docker CLI
 
