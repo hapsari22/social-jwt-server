@@ -53,7 +53,7 @@ function requestLongLivedToken(shortLivedToken) {
       if (!error && response.statusCode == 200) {
         resolve(body);
       } else {
-        reject(error);
+        reject(JSON.parse(body));
       }
     });
   });
